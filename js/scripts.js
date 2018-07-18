@@ -29,9 +29,9 @@ AJAX({
    this._xhr = new XMLHttpRequest();
    this.config = this._extendOptions(config);
    this._assingEvents();
-   this._open();
+   this._open(); // load Ajax object
    this._assingUserHeaders();
-   this._send();
+   this._send(); // send Ajax object
 
    console.log(this._defaultConfig);
  }
@@ -60,6 +60,8 @@ AJAX({
    return defaultConfig;
  };
 
+ // this function will load all parameters that user set if user didn't 
+ // sent any parameters function will set defoult paramters
  AJAX.prototype._open = function () {
    this._xhr.open(
      this._config.type,
@@ -82,7 +84,9 @@ AJAX({
    this._xhr.send();
  };
 
- AJAX.prototype._assingUserHeaders = function (e) {
+ // this function will check are user added headers if yes function will join them to Ajax object
+
+ AJAX.prototype._assingUserHeaders = function () {
    if(Object.keys(this._config.headers).length){
      for (let key in this._config.headers) {
        this._xhr.setRequestHeader(key, this._config.headers[key]);
@@ -90,9 +94,9 @@ AJAX({
    }
  };
 
+ //
  AJAX.prototype._handleResponse = function (e) {
    if (this._xhr.readyState === 4 && this._xhr.status === 200) {
-     console.log("Elo");
    }
  };
 
