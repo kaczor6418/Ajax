@@ -22,20 +22,17 @@ AJAX({
 
  function AJAX(config) {
 
-   if (!(this instanceof AJAX)) {
+   if(!(this instanceof AJAX)) {
      return new AJAX(config);
    }
 
    this._xhr = new XMLHttpRequest();
-   this.config = this._extendOptions(config);
+   this._config = this._extendOptions(config);
    this._assingEvents();
-   this._open(); // load Ajax object
-   this._assingUserHeaders();
-   this._send(); // send Ajax object
-
-   console.log(this._defaultConfig);
+   this._beforeSend(); // load,assign and send json
  }
 
+ // if user didn't give config parameters this function will set defaultConfig
  AJAX.prototype._defaultConfig = {
    type: "GET",
    url: window.location.href,
@@ -50,25 +47,26 @@ AJAX({
  };
 
  AJAX.prototype._extendOptions = function(config) {
+  var defaultConfig = JSON.parse(JSON.stringify(this._defaultConfig));
 
-   var defaultConfig = JSON.parse(JSON.stringify(this._defaultConfig));
+   // if user gave config parameters defaultConfig will be overrwrittne by user config
    for (let key in defaultConfig) {
      if (key in config) {
        defaultConfig[key] = config[key];
      }
-   }
+   }   
    return defaultConfig;
  };
 
  // this function will load all parameters that user set if user didn't 
  // sent any parameters function will set defoult paramters
- AJAX.prototype._open = function () {
+ AJAX.prototype._open = function() {
    this._xhr.open(
      this._config.type,
      this._config.url,
      this._config.options.async,
      this._config.options.username,
-     this._config.type.options.password
+     this._config.options.password
    );
    this._xhr.timeout = this._config.options.timeout;
  };
@@ -80,7 +78,20 @@ AJAX({
    this._xhr.addEventListener("timeout", this._handleError.bind(this), false);
  };
 
- AJAX.prototype._send = function () {
+ AJAX.prototype._beforeSend = function () {
+  var isData = Object.keys(this._config.data).length > 0,
+      data = null;
+    
+    if(this._config.type.toUpperCase() === "POST" && isData) {
+      data = this._serializeFormData(this._config.data)
+    }
+
+    this._open(); // load Ajax object
+    this._assingUserHeaders(); // load user veriables
+    this._send(data); // send Ajax object
+};
+
+ AJAX.prototype._send = function() {
    this._xhr.send();
  };
 
@@ -95,13 +106,24 @@ AJAX({
  };
 
  //
- AJAX.prototype._handleResponse = function (e) {
+ AJAX.prototype._handleResponse = function () {
    if (this._xhr.readyState === 4 && this._xhr.status === 200) {
+     console.log("No elo coś tam doszło");
    }
  };
 
  AJAX.prototype._handleError = function (e) {
 
+ };
+
+ AJAX.prototype._serializeFormData = function(data) {
+   var serialized = new FormData();
+
+   for(var key in data) {
+     serialized.append(key, data[key]);
+   }
+
+   return serialized;
  };
 
 
