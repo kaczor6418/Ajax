@@ -52,10 +52,11 @@ AJAX({
    // if user gave config parameters defaultConfig will be overrwrittne by user config
    for (let key in defaultConfig) {
      if (key in config) {
-       defaultConfig[key] = config[key];
+       continue;
      }
+     defaultConfig[key] = config[key];
    }   
-   return defaultConfig;
+   return config;
  };
 
  // this function will load all parameters that user set if user didn't 
@@ -81,9 +82,10 @@ AJAX({
  AJAX.prototype._beforeSend = function () {
   var isData = Object.keys(this._config.data).length > 0,
       data = null;
-    
-    if(this._config.type.toUpperCase() === "POST" && isData) {
+    if((this._config.type.toUpperCase() === "POST") && isData) {
       data = this._serializeFormData(this._config.data)
+    }else if((this._config.type.toUpperCase() === "GET") && isData) {
+      this._config.url += "?" + this._serializedData(this._config.data);
     }
 
     this._open(); // load Ajax object
@@ -91,8 +93,8 @@ AJAX({
     this._send(data); // send Ajax object
 };
 
- AJAX.prototype._send = function() {
-   this._xhr.send();
+ AJAX.prototype._send = function(data) {
+   this._xhr.send(data);
  };
 
  // this function will check are user added headers if yes function will join them to Ajax object
@@ -105,26 +107,44 @@ AJAX({
    }
  };
 
- //
+ 
  AJAX.prototype._handleResponse = function () {
-   if (this._xhr.readyState === 4 && this._xhr.status === 200) {
-     console.log("No elo coś tam doszło");
+   if (this._xhr.readyState === 4 && this._xhr.status >= 200 && this._xhr.status <400) {
+     if(typeof this._config.success === "function") {
+       this._config.success(this._xhr.response, this._xhr);
+     }
+   } else if(this._xhr.readyState === 4 && this._xhr.status >= 400) {
+     this._handleError();
    }
  };
 
- AJAX.prototype._handleError = function (e) {
-
+ AJAX.prototype._handleError = function () {
+  if(typeof this._config.failure === "function"){
+    this._config.failure(this._xhr);
+  }
  };
 
+ // add user variables to data and saving data with aed user variables
  AJAX.prototype._serializeFormData = function(data) {
    var serialized = new FormData();
-
-   for(var key in data) {
+  
+   for(let key in data) {
      serialized.append(key, data[key]);
    }
 
    return serialized;
  };
+
+ // change 
+ AJAX.prototype._serializedData = function(data) {
+  var serialized = "";
+
+  for(let key in data) {
+    serialized += key + "=" + encodeURIComponent(data[key]) + "&";
+  }
+
+  return serialized.slice(0, serialized.length - 1);
+ }
 
 
 AJAX({
@@ -133,14 +153,14 @@ AJAX({
      data: {
          firstName: "Piotr",
          lastName: "Kowalski"
-     },
+     }, 
      headers: {
          "X-My-Header": "123#asdf"
      },
      success: function(response, xhr) {
-         console.log("Udało się! Status: " + xhr.status);
+         console.log(response, xhr.status);
      },
      failure: function(xhr) {
-         console.log("Wystąpił błąd. Status: " + xhr.status);
+         console.log(xhr.status);
      }
  });
