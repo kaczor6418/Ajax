@@ -70,6 +70,7 @@ AJAX({
      this._config.options.password
    );
    this._xhr.timeout = this._config.options.timeout;
+   this._xhr.setRequestHeader("X-Request-With", "XMLHttpRequest");
  };
 
  AJAX.prototype._assingEvents = function () {
